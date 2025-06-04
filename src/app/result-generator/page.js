@@ -12,6 +12,9 @@ export default function ResultGenerator() {
   const [loading, setLoading] = useState(false);
   const [sortBy, setSortBy] = useState("totalScore");
   const [previousTotals, setPreviousTotals] = useState({});
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportDate, setExportDate] = useState("");
+  const [exportDay, setExportDay] = useState("day1");
 
   // Helper to normalize team names (case-insensitive, trimmed)
   const normalizeName = (name) => (name || "").trim().toLowerCase();
@@ -145,7 +148,11 @@ export default function ResultGenerator() {
   };
 
   const exportToExcel = () => {
-    const today = new Date().toISOString().split("T")[0];
+    if (!exportDate || !exportDay) {
+      toast.error("Please select both date and day");
+      return;
+    }
+
     const wsData = [];
     // Create header row
     const header = ["Rank", "Team Name", "Total Score", "Total Matches"];
@@ -159,8 +166,9 @@ export default function ResultGenerator() {
     const worksheet = XLSX.utils.aoa_to_sheet(wsData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Results");
-    XLSX.writeFile(workbook, `tournament_results_${today}.xlsx`);
+    XLSX.writeFile(workbook, `tournament_results_${exportDate}_${exportDay}.xlsx`);
     toast.success("Results exported successfully");
+    setShowExportModal(false);
   };
 
   const handleSort = (criteria) => {
@@ -269,7 +277,7 @@ export default function ResultGenerator() {
                   <option value="totalMatches">Sort by Total Matches</option>
                 </select>
                 <button
-                  onClick={exportToExcel}
+                  onClick={() => setShowExportModal(true)}
                   className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200 flex items-center gap-2"
                 >
                   <svg
@@ -348,6 +356,57 @@ export default function ResultGenerator() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {showExportModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <div className="bg-gray-800 p-6 rounded-xl shadow-xl border border-purple-500/20 w-96">
+              <h3 className="text-xl font-semibold text-white mb-4">Export Settings</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Select Date
+                  </label>
+                  <input
+                    type="date"
+                    value={exportDate}
+                    onChange={(e) => setExportDate(e.target.value)}
+                    className="w-full p-2 rounded-lg bg-gray-700 text-white border-2 border-purple-500/30 focus:border-purple-500 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Select Day
+                  </label>
+                  <select
+                    value={exportDay}
+                    onChange={(e) => setExportDay(e.target.value)}
+                    className="w-full p-2 rounded-lg bg-gray-700 text-white border-2 border-purple-500/30 focus:border-purple-500 outline-none"
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7].map((day) => (
+                      <option key={day} value={`day${day}`}>
+                        Day {day}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex justify-end gap-4 mt-6">
+                  <button
+                    onClick={() => setShowExportModal(false)}
+                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={exportToExcel}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                  >
+                    Export
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
