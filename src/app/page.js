@@ -1,103 +1,131 @@
+"use client";
 import Image from "next/image";
+import { useState } from "react";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [tournamentLinks, setTournamentLinks] = useState("");
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  const extractTournamentIds = (text) => {
+    const regex = /battlexo\.com\/tournaments\/([a-f0-9]+)/g;
+    const matches = [...text.matchAll(regex)];
+    return matches.map(match => match[1]);
+  };
+
+  const fetchTournamentResults = async (ids) => {
+    setLoading(true);
+    const allResults = [];
+    
+    for (const id of ids) {
+      try {
+        const response = await fetch(`https://api.battlexo.com/api/v1/core/tournament/result/${id}`);
+        const data = await response.json();
+        if (data.status === 1 && data.data.tournamentResult) {
+          allResults.push(...data.data.tournamentResult[0].result[0].result);
+        }
+      } catch (error) {
+        console.error(`Error fetching results for tournament ${id}:`, error);
+      }
+    }
+
+    // Aggregate results by team
+    const teamResults = {};
+    allResults.forEach(result => {
+      if (!teamResults[result.teamName]) {
+        teamResults[result.teamName] = {
+          totalScore: 0,
+          matches: 0,
+          teamId: result.teamId
+        };
+      }
+      teamResults[result.teamName].totalScore += result.score;
+      teamResults[result.teamName].matches += 1;
+    });
+
+    // Convert to array and sort by total score
+    const sortedResults = Object.entries(teamResults)
+      .map(([teamName, data]) => ({
+        teamName,
+        ...data
+      }))
+      .sort((a, b) => b.totalScore - a.totalScore);
+
+    setResults(sortedResults);
+    setLoading(false);
+  };
+
+  const exportToExcel = () => {
+    let csv = "Team Name,Total Score,Matches Played\n";
+    results.forEach(team => {
+      csv += `${team.teamName},${team.totalScore},${team.matches}\n`;
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'tournament_results.csv';
+    link.click();
+  };
+
+  return (
+    <div className="min-h-screen p-8 font-[family-name:var(--font-geist-sans)]">
+      <main className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold mb-8 text-center">Tournament Results Calculator</h1>
+        
+        <div className="mb-8">
+          <textarea 
+            className="w-full h-48 p-4 border rounded-lg"
+            placeholder="Paste tournament details here..."
+            value={tournamentLinks}
+            onChange={(e) => setTournamentLinks(e.target.value)}
+          />
+          <button
+            onClick={() => fetchTournamentResults(extractTournamentIds(tournamentLinks))}
+            className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            disabled={loading}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            {loading ? 'Calculating...' : 'Calculate Results'}
+          </button>
         </div>
+
+        {results.length > 0 && (
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Results</h2>
+              <button
+                onClick={exportToExcel}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+              >
+                Export to Excel
+              </button>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="p-3 text-left">Rank</th>
+                    <th className="p-3 text-left">Team Name</th>
+                    <th className="p-3 text-left">Total Score</th>
+                    <th className="p-3 text-left">Matches</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {results.map((team, index) => (
+                    <tr key={team.teamId} className="border-b">
+                      <td className="p-3">{index + 1}</td>
+                      <td className="p-3">{team.teamName}</td>
+                      <td className="p-3">{team.totalScore}</td>
+                      <td className="p-3">{team.matches}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
     </div>
   );
 }
