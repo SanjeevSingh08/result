@@ -18,7 +18,7 @@ export default function Home() {
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-12">
           <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
-            Tournament Hub
+            DMES Management
           </h1>
           <button
             onClick={handleLogout}

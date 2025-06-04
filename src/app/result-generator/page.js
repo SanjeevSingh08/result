@@ -166,7 +166,10 @@ export default function ResultGenerator() {
     const worksheet = XLSX.utils.aoa_to_sheet(wsData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Results");
-    XLSX.writeFile(workbook, `tournament_results_${exportDate}_${exportDay}.xlsx`);
+    XLSX.writeFile(
+      workbook,
+      `tournament_results_${exportDate}_${exportDay}.xlsx`
+    );
     toast.success("Results exported successfully");
     setShowExportModal(false);
   };
@@ -182,9 +185,21 @@ export default function ResultGenerator() {
       <main className="max-w-5xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-4xl font-bold text-white">Result Generator</h1>
-          <Link href="/" className="text-white hover:text-purple-300">
-            ← Back to Home
-          </Link>
+          <div className="flex gap-4">
+            <Link
+              href="/extract-links"
+              className="px-4 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-medium transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-purple-500/25 transform hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <span>Extract Links</span>
+            </Link>
+            <Link
+              href="/"
+              className="px-4 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-medium transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-purple-500/25 transform hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <span className="text-xl">←</span>
+              <span>Back to Home</span>
+            </Link>
+          </div>
         </div>
         <div className="mb-8 bg-gray-800/50 backdrop-blur-lg p-6 rounded-xl shadow-lg border border-purple-500/20">
           <div className="mb-4">
@@ -363,7 +378,9 @@ export default function ResultGenerator() {
         {showExportModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
             <div className="bg-gray-800 p-6 rounded-xl shadow-xl border border-purple-500/20 w-96">
-              <h3 className="text-xl font-semibold text-white mb-4">Export Settings</h3>
+              <h3 className="text-xl font-semibold text-white mb-4">
+                Export Settings
+              </h3>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">

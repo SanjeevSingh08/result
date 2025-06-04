@@ -5,7 +5,7 @@ import { AuthProvider } from "@/context/AuthContext";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "Tournament Hub",
+  title: "DMES Management",
   description: "Track tournament results and extract tournament links",
 };
 

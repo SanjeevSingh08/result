@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function ExtractLinks() {
   const [tournaments, setTournaments] = useState([]);
@@ -15,30 +15,31 @@ export default function ExtractLinks() {
     setLoading(true);
     setError(null);
     try {
-      const size = selectedDate === new Date().toISOString().split('T')[0] ? '50' : '100';
-      
+      const size =
+        selectedDate === new Date().toISOString().split("T")[0] ? "50" : "100";
+
       const urls = [
         `https://api.battlexo.com/api/v1/core/tournament?status=upcoming&tournamentType=Prize+Pool&gameId=3&size=${size}&page=0`,
         `https://api.battlexo.com/api/v1/core/tournament?status=live&tournamentType=Prize+Pool&gameId=3&size=${size}&page=0`,
-        `https://api.battlexo.com/api/v1/core/tournament?status=completed&tournamentType=Prize+Pool&gameId=3&size=${size}&page=0`
+        `https://api.battlexo.com/api/v1/core/tournament?status=completed&tournamentType=Prize+Pool&gameId=3&size=${size}&page=0`,
       ];
 
-      const responses = await Promise.all(urls.map(url => fetch(url)));
-      const data = await Promise.all(responses.map(res => res.json()));
+      const responses = await Promise.all(urls.map((url) => fetch(url)));
+      const data = await Promise.all(responses.map((res) => res.json()));
 
-      const allTournaments = data.flatMap(response => 
-        response.data?.tournaments || []
+      const allTournaments = data.flatMap(
+        (response) => response.data?.tournaments || []
       );
 
-      const deathmateTournaments = allTournaments.filter(tournament =>
-        tournament.space?.name === "DeathMate Esports"
+      const deathmateTournaments = allTournaments.filter(
+        (tournament) => tournament.space?.name === "DeathMate Esports"
       );
 
       // Filter by selected date and time slot
-      const filteredTournaments = deathmateTournaments.filter(tournament => {
+      const filteredTournaments = deathmateTournaments.filter((tournament) => {
         const tournamentDate = new Date(tournament.startDate);
         const selectedDateTime = new Date(selectedDate);
-        
+
         if (tournamentDate.getHours() < 1) {
           tournamentDate.setDate(tournamentDate.getDate() - 1);
         }
@@ -66,11 +67,14 @@ export default function ExtractLinks() {
         const timeB = new Date(b.startDate);
         const minutesA = timeA.getHours() * 60 + timeA.getMinutes();
         const minutesB = timeB.getHours() * 60 + timeB.getMinutes();
-        
-        if ((minutesA < 60 && minutesB > 60) || (minutesB < 60 && minutesA > 60)) {
+
+        if (
+          (minutesA < 60 && minutesB > 60) ||
+          (minutesB < 60 && minutesA > 60)
+        ) {
           return minutesA < 60 ? 1 : -1;
         }
-        
+
         return minutesA - minutesB;
       });
 
@@ -89,18 +93,23 @@ export default function ExtractLinks() {
     return date.toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
-      hour12: true
+      hour12: true,
     });
   };
 
   const generateFormattedText = () => {
     const getTimeRange = () => {
-      switch(selectedSlot) {
-        case "first": return "01:10 PM - 04:30 PM";
-        case "second": return "05:10 PM - 08:30 PM";
-        case "third": return "09:10 PM - 12:30 AM";
-        case "all": return "ALL SLOTS";
-        default: return "";
+      switch (selectedSlot) {
+        case "first":
+          return "01:10 PM - 04:30 PM";
+        case "second":
+          return "05:10 PM - 08:30 PM";
+        case "third":
+          return "09:10 PM - 12:30 AM";
+        case "all":
+          return "ALL SLOTS";
+        default:
+          return "";
       }
     };
 
@@ -117,15 +126,22 @@ MATCH TIME : ${getTimeRange()}
 #3 - 100 POINTS
 🔰 XO POINTS CAN BE REDEEMED IN XO SHOP FOR BGMI UC & GIFTCARDS
 ━━━━━━━━━━━━━━━━━━━━
-${tournaments.map(t => `${formatTime(t.startDate)} : https://www.battlexo.com/tournaments/${t.id}`).join('\n\n')}`;
-    
+${tournaments
+  .map(
+    (t) =>
+      `${formatTime(t.startDate)} : https://www.battlexo.com/tournaments/${
+        t.id
+      }`
+  )
+  .join("\n\n")}`;
+
     return text;
   };
 
   const copyToClipboard = () => {
     const text = generateFormattedText();
     navigator.clipboard.writeText(text);
-    toast.success('Copied to clipboard!');
+    toast.success("Copied to clipboard!");
   };
 
   return (
@@ -136,13 +152,21 @@ ${tournaments.map(t => `${formatTime(t.startDate)} : https://www.battlexo.com/to
           <h1 className="text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
             Extract Tournament Links
           </h1>
-          <Link 
-            href="/" 
-            className="text-white hover:text-purple-400 transition-colors duration-300 flex items-center gap-2"
-          >
-            <span className="text-2xl">←</span>
-            <span className="font-medium">Back to Home</span>
-          </Link>
+          <div className="flex gap-4">
+            <Link
+              href="/result-generator"
+              className="px-4 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-medium transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-purple-500/25 transform hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <span>Result Generator</span>
+            </Link>
+            <Link
+              href="/"
+              className="px-4 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-medium transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-purple-500/25 transform hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <span className="text-xl">←</span>
+              <span>Back to Home</span>
+            </Link>
+          </div>
         </div>
 
         <div className="bg-gray-800/50 backdrop-blur-lg p-8 rounded-2xl shadow-2xl border border-purple-500/20 mb-8">
@@ -153,8 +177,16 @@ ${tournaments.map(t => `${formatTime(t.startDate)} : https://www.battlexo.com/to
               className="p-3 rounded-xl bg-gray-700 text-white border-2 border-purple-500/30 focus:border-purple-500 outline-none transition-all duration-300 cursor-pointer hover:border-purple-500/50"
             >
               <option value="">Select Date</option>
-              <option value={new Date().toISOString().split('T')[0]}>Today</option>
-              <option value={new Date(Date.now() - 86400000).toISOString().split('T')[0]}>Yesterday</option>
+              <option value={new Date().toISOString().split("T")[0]}>
+                Today
+              </option>
+              <option
+                value={
+                  new Date(Date.now() - 86400000).toISOString().split("T")[0]
+                }
+              >
+                Yesterday
+              </option>
             </select>
             <select
               value={selectedSlot}
@@ -180,7 +212,7 @@ ${tournaments.map(t => `${formatTime(t.startDate)} : https://www.battlexo.com/to
               </span>
             </button>
           </div>
-          
+
           {tournaments.length > 0 && (
             <button
               onClick={copyToClipboard}

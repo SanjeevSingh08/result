@@ -45,7 +45,7 @@ export default function Login() {
       <main className="max-w-md mx-auto mt-20">
         <div className="bg-gray-800/50 backdrop-blur-lg p-8 rounded-2xl shadow-2xl border border-purple-500/20">
           <h1 className="text-4xl font-bold text-center mb-8 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
-            Tournament Hub
+            DMES Management
           </h1>
 
           <form onSubmit={handleSubmit} className="space-y-6">
